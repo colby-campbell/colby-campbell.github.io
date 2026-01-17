@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function formatTime(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60)
@@ -7,6 +8,7 @@ function formatTime(totalSeconds: number) {
 }
 
 function Timer() {
+  const navigate = useNavigate()
   const [inputMinutes, setInputMinutes] = useState<string>('25')
   const [secondsLeft, setSecondsLeft] = useState<number>(25 * 60)
   const [running, setRunning] = useState<boolean>(false)
@@ -47,8 +49,16 @@ function Timer() {
 
   return (
     <main className="timer">
+      {/* corner button */}
+      <button
+        className="settings-btn"
+        onClick={() => navigate('/settings')}
+        aria-label="Open settings"
+      >
+        ⚙️
+      </button>
       <header className="timer__header">
-        <h1>Timer</h1>
+        <h1>timeblind</h1>
       </header>
 
       <section className="timer__display" aria-live="polite">
