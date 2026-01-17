@@ -4,7 +4,6 @@ import './App.css'
 import Timer from './components/Timer'
 import Settings from './components/Settings'
 import Info from './components/Info'
-import Landing from './components/Landing'
 
 import { useEffect, useRef, useState } from 'react'
 import { MUSIC_CATALOG } from './music/catalog'
@@ -14,11 +13,18 @@ import type { MusicCategory } from './music/catalog'
 function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
 
-  // 🔁 queue state
-  const [category] = useState<MusicCategory>('lofi')
+  // queue state
+  // const [category] = 
+  useState<MusicCategory>('lofi')
+  
   const [queue, setQueue] = useState<string[]>([...MUSIC_CATALOG.lofi])
   const [currentTrack, setCurrentTrack] = useState(0)
   const [playing, setPlaying] = useState(false)
+  
+  // Avoid render loop: set initial playing state in an effect
+  useEffect(() => {
+    setPlaying(true)
+  }, [])
 
   // Load track when index changes
   useEffect(() => {

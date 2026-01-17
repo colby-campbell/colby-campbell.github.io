@@ -37,6 +37,9 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
   const [running, setRunning] = useState<boolean>(false)
 
   const intervalRef = useRef<number | null>(null)
+  
+  // input field for minutes
+  const [inputMinutes, setInputMinutes] = useState<string>(String(focusMinutes))
 
     useEffect(() => {
     const f = getStoredMinutes("focusMinutes", 25)
@@ -47,6 +50,11 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
     setSecondsLeft(f * 60)
     setRunning(false)
   }, [])
+
+  // keep input synced with current mode
+  useEffect(() => {
+    setInputMinutes(String(mode === "focus" ? focusMinutes : breakMinutes))
+  }, [mode, focusMinutes, breakMinutes])
 
   // Handle timer ticking
   useEffect(() => {
@@ -64,31 +72,27 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
     }
   }, [running])
 
-  // Stop timer + music when time reaches 0
+  // When time reaches 0 → switch modes and reset
   useEffect(() => {
-    if (secondsLeft === 0 && intervalRef.current) {
+    if (secondsLeft !== 0) return
+
+    if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
-      setRunning(false)
-      onStop()
     }
-  }, [secondsLeft, onStop])
 
-      // stop current interval to avoid double timers
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
+    const nextMode: Mode = mode === "focus" ? "break" : "focus"
+    setMode(nextMode)
 
-      const nextMode: Mode = mode === "focus" ? "break" : "focus"
-      setMode(nextMode)
+    const nextSeconds = (nextMode === "focus" ? focusMinutes : breakMinutes) * 60
+    setSecondsLeft(nextSeconds)
 
-      const nextSeconds = (nextMode === "focus" ? focusMinutes : breakMinutes) * 60
-      setSecondsLeft(nextSeconds)
+    // keep running state as-is
+    setRunning((r) => r)
 
-      // keep running if the user had started it
-      setRunning((r) => r)
-  }, [secondsLeft, mode, focusMinutes, breakMinutes])
+    // stop music once per transition
+    onStop()
+  }, [secondsLeft, mode, focusMinutes, breakMinutes, onStop])
 
   const toggle = () => {
   setRunning((r) => {
@@ -103,6 +107,21 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
     return next
   })
 }
+
+  // apply minutes from input to current mode
+  const handleSet = () => {
+    const n = Math.max(0, Math.floor(Number(inputMinutes)))
+    if (!Number.isFinite(n)) return
+
+    if (mode === "focus") {
+      setFocusMinutes(n)
+      localStorage.setItem("focusMinutes", String(n))
+    } else {
+      setBreakMinutes(n)
+      localStorage.setItem("breakMinutes", String(n))
+    }
+    setSecondsLeft(n * 60)
+  }
 
 
   const reset = () => {
