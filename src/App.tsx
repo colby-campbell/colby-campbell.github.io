@@ -1,7 +1,12 @@
 import { Route, Routes } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
-import Landing from './components/Landing'
+import './App.css'
+
 import Timer from './components/Timer'
+import Settings from './components/Settings'
+import Info from './components/Info'
+import Landing from './components/Landing'
+
+import { useEffect, useRef, useState } from 'react'
 import { MUSIC_CATALOG } from './music/catalog'
 import type { MusicCategory } from './music/catalog'
 
@@ -61,16 +66,10 @@ const stopMusic = () => {
       />
 
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route
-          path="/timer"
-          element={<Timer
-  onStart={startMusic}
-  onPause={pauseMusic}
-  onStop={stopMusic}
-/>
-}
-        />
+        <Route path="/" element={<Timer onStart={startMusic} onPause={pauseMusic} onStop={stopMusic}/>}/>
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/info" element={<Info />} />
+        <Route path="*" element={<div style={{ padding: 40 }}>No route matched.</div>} />
       </Routes>
     </div>
   )

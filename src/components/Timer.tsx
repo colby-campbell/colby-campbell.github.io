@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type TimerProps = {
   onStart: () => void
@@ -13,12 +14,39 @@ function formatTime(totalSeconds: number) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+
+type Mode = "focus" | "break"
+
+function getStoredMinutes(key: "focusMinutes" | "breakMinutes", fallback: number){
+    const raw = localStorage.getItem(key)
+    const n = Math.floor(Number(raw))
+    return Number.isFinite(n) && n > 0 ? n : fallback
+}
+
 function Timer({ onStart, onPause, onStop }: TimerProps) {
-  const [inputMinutes, setInputMinutes] = useState<string>('25')
-  const [secondsLeft, setSecondsLeft] = useState<number>(25 * 60)
+  const navigate = useNavigate()
+
+  //25 and 5 default settings for now
+  const [focusMinutes, setFocusMinutes] = useState<number>(() => getStoredMinutes("focusMinutes", 25))
+  const [breakMinutes, setBreakMinutes] = useState<number>(() => getStoredMinutes("breakMinutes", 5))
+
+  //focus mode
+  const [mode, setMode] = useState<Mode>("focus")
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => focusMinutes * 60)
+
   const [running, setRunning] = useState<boolean>(false)
 
   const intervalRef = useRef<number | null>(null)
+
+    useEffect(() => {
+    const f = getStoredMinutes("focusMinutes", 25)
+    const b = getStoredMinutes("breakMinutes", 5)
+    setFocusMinutes(f)
+    setBreakMinutes(b)
+    setMode("focus")
+    setSecondsLeft(f * 60)
+    setRunning(false)
+  }, [])
 
   // Handle timer ticking
   useEffect(() => {
@@ -46,19 +74,30 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
     }
   }, [secondsLeft, onStop])
 
-  const handleSet = () => {
-    const mins = Math.max(0, Math.floor(Number(inputMinutes) || 0))
-    setSecondsLeft(mins * 60)
-  }
+      // stop current interval to avoid double timers
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+
+      const nextMode: Mode = mode === "focus" ? "break" : "focus"
+      setMode(nextMode)
+
+      const nextSeconds = (nextMode === "focus" ? focusMinutes : breakMinutes) * 60
+      setSecondsLeft(nextSeconds)
+
+      // keep running if the user had started it
+      setRunning((r) => r)
+  }, [secondsLeft, mode, focusMinutes, breakMinutes])
 
   const toggle = () => {
   setRunning((r) => {
     const next = !r
 
     if (next) {
-      onStart()   // ▶ resume / start
+      onStart()   // resume / start
     } else {
-      onPause()   // ⏸ pause ONLY
+      onPause()   // pause ONLY
     }
 
     return next
@@ -67,16 +106,41 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
 
 
   const reset = () => {
-    const mins = Math.max(0, Math.floor(Number(inputMinutes) || 0))
-    setSecondsLeft(mins * 60)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
     setRunning(false)
+    setMode("focus")
+    setSecondsLeft(focusMinutes * 60)
     onStop() // 🔇 stop music
   }
 
+  const label = mode === "focus" ? "Focus" : "Break"
+
   return (
     <main className="timer">
+      {/* settings button */}
+      <button
+        className="settings-btn"
+        onClick={() => navigate('/settings')}
+        aria-label="Open settings"
+      >
+        ⚙️
+      </button>
+
+       {/* info button */}
+      <button
+        className="info-btn"
+        onClick={() => navigate('/info')}
+        aria-label="Open info page"
+      >
+        💡
+      </button>
+
       <header className="timer__header">
-        <h1>Timer</h1>
+        <h1>timeblind</h1>
+        <div aria-label="current mode" style={{ opacity: 0.8 }}>{label}</div>
       </header>
 
       <section className="timer__display" aria-live="polite">
@@ -102,10 +166,14 @@ function Timer({ onStart, onPause, onStop }: TimerProps) {
           </button>
           <button className="btn" onClick={reset}>Reset</button>
         </div>
+
+        <small style={{ opacity: 0.75 }}>
+          Focus: {focusMinutes}m • Break: {breakMinutes}m
+        </small>
       </section>
 
       <footer className="timer__footer">
-        <small>Tip: Use Set to apply changes before starting.</small>
+        <small>Tip: Adjust durations in Settings.</small>
       </footer>
     </main>
   )
