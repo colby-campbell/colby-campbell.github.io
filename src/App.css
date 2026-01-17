@@ -63,7 +63,7 @@
 .btn-primary { background-color: #646cff; color: white; }
 .btn-primary:hover { background-color: #535bf2; }
 
-/* Landing */
+/* Landing (delete) */
 .landing { display: grid; gap: 1.5rem; justify-items: center; }
 .landing__header h1 { margin: 0; font-size: 3rem; }
 .landing__subtitle { color: #888; margin-top: 0.5rem; }

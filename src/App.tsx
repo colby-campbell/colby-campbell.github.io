@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import './App.css'
 import Timer from './components/Timer'
 import Settings from './components/Settings'
+import Info from './components/Info'
 
 function App() {
   return (
@@ -9,7 +10,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Timer />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<div style={{ padding: 40 }}>No route matched.</div>} />
+        <Route path="/info" element={<Info />} />
+        <Route path="*" element={<div style={{ padding: 40 }}>No route matched.</div>} /> 
       </Routes>
     </div>
   )
