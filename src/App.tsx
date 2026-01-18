@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Timer from './components/Timer'
 import Settings from './components/Settings'
 import Info from './components/Info'
+import './App.css'
 
 import { SOUND_SOURCES } from './music/catalog'
 import type { SoundChoice } from './music/catalog'
@@ -69,18 +70,10 @@ function App() {
       />
 
       <Routes>
-        <Route
-          path="/"
-          element={
-            <Timer
-              onStart={startMusic}
-              onPause={pauseMusic}
-              onStop={stopMusic}
-            />
-          }
-        />
+                <Route path="/" element={<Timer onStart={startMusic} onPause={pauseMusic} onStop={stopMusic}/>}/>
         <Route path="/settings" element={<Settings />} />
         <Route path="/info" element={<Info />} />
+        <Route path="*" element={<div style={{ padding: 40 }}>No route matched.</div>} />
       </Routes>
     </div>
   )
