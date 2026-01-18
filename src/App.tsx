@@ -1,67 +1,63 @@
 import { Route, Routes } from 'react-router-dom'
-import './App.css'
-
+import { useEffect, useRef, useState } from 'react'
 import Timer from './components/Timer'
 import Settings from './components/Settings'
 import Info from './components/Info'
 
-import { useEffect, useRef, useState } from 'react'
-import { MUSIC_CATALOG } from './music/catalog'
-import type { MusicCategory } from './music/catalog'
-
+import { SOUND_SOURCES } from './music/catalog'
+import type { SoundChoice } from './music/catalog'
 
 function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
 
-  // queue state
-  // const [category] = 
-  useState<MusicCategory>('lofi')
-  
-  const [queue, setQueue] = useState<string[]>([...MUSIC_CATALOG.lofi])
-  const [currentTrack, setCurrentTrack] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  
-  // Avoid render loop: set initial playing state in an effect
-  useEffect(() => {
-    setPlaying(true)
-  }, [])
+  // Hard-coded choice for now
+  const choice: SoundChoice = "rain"
 
-  // Load track when index changes
+  // Initialize queue from choice
+  const [queue, setQueue] = useState<string[]>(() => [
+    ...SOUND_SOURCES[choice],
+  ])
+
+  const [playing, setPlaying] = useState(false)
+
+  // Load current track
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || queue.length === 0) return
 
-    audio.src = queue[currentTrack]
+    audio.src = queue[0]
     audio.load()
 
     if (playing) {
       audio.play().catch(() => {})
     }
-  }, [currentTrack, queue, playing])
+  }, [queue, playing])
 
-  // When a song ends → rotate queue
+  // Rotate queue (even length 1)
   const handleEnded = () => {
     setQueue((prev) => {
+      if (prev.length === 0) return prev
       const [finished, ...rest] = prev
       return [...rest, finished]
     })
-    setCurrentTrack(0)
   }
 
   const startMusic = () => {
-  audioRef.current?.play()
-}
+    setPlaying(true)
+    audioRef.current?.play().catch(() => {})
+  }
 
-const pauseMusic = () => {
-  audioRef.current?.pause()
-}
+  const pauseMusic = () => {
+    setPlaying(false)
+    audioRef.current?.pause()
+  }
 
-const stopMusic = () => {
-  if (!audioRef.current) return
-  audioRef.current.pause()
-  audioRef.current.currentTime = 0
-}
-
+  const stopMusic = () => {
+    setPlaying(false)
+    if (!audioRef.current) return
+    audioRef.current.pause()
+    audioRef.current.currentTime = 0
+  }
 
   return (
     <div className="app-container">
@@ -69,13 +65,22 @@ const stopMusic = () => {
         ref={audioRef}
         preload="auto"
         onEnded={handleEnded}
+        hidden
       />
 
       <Routes>
-        <Route path="/" element={<Timer onStart={startMusic} onPause={pauseMusic} onStop={stopMusic}/>}/>
+        <Route
+          path="/"
+          element={
+            <Timer
+              onStart={startMusic}
+              onPause={pauseMusic}
+              onStop={stopMusic}
+            />
+          }
+        />
         <Route path="/settings" element={<Settings />} />
         <Route path="/info" element={<Info />} />
-        <Route path="*" element={<div style={{ padding: 40 }}>No route matched.</div>} />
       </Routes>
     </div>
   )
